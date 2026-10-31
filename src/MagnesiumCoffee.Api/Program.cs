@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using System.Text;
 using MagnesiumCoffee.Api.Dados;
+using MagnesiumCoffee.Api.Servicos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 
@@ -39,6 +41,12 @@ builder.Services
         };
     });
 builder.Services.AddAuthorization();
+builder.Services.AddSingleton(new JwtConfig(jwtSegredo, jwtEmissor, jwtPublico,
+    builder.Configuration.GetValue("Jwt:ExpiracaoHoras", 8)));
+builder.Services.AddSingleton<TokenServico>();
+
+// --- Serviços de negócio ---
+builder.Services.AddScoped<AuthServico>();
 
 // --- CORS (front React) ---
 var origens = (builder.Configuration["Cors:Origens"] ?? "http://localhost:5173")
@@ -90,8 +98,23 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
 app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
+
+// /health como endpoint normal (e não MapHealthChecks) para aparecer no Swagger.
+app.MapGet("/health", async (HealthCheckService saude) =>
+{
+    var relatorio = await saude.CheckHealthAsync();
+    var corpo = new
+    {
+        status = relatorio.Status.ToString(),
+        verificacoes = relatorio.Entries.ToDictionary(e => e.Key, e => e.Value.Status.ToString()),
+        duracaoMs = (int)relatorio.TotalDuration.TotalMilliseconds,
+    };
+    return relatorio.Status == HealthStatus.Healthy
+        ? Results.Ok(corpo)
+        : Results.Json(corpo, statusCode: StatusCodes.Status503ServiceUnavailable);
+}).WithTags("Sistema").Produces(StatusCodes.Status200OK).Produces(StatusCodes.Status503ServiceUnavailable);
+
 app.MapGet("/api/versao", (IHostEnvironment env) => Results.Ok(new
 {
     commit = Environment.GetEnvironmentVariable("RENDER_GIT_COMMIT") ?? "local",
