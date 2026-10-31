@@ -1,0 +1,133 @@
+@url = https://magnesium-coffee-api.onrender.com
+# @url = http://localhost:5080
+@token = COLE_O_TOKEN_AQUI
+
+### Saúde e versão
+GET {{url}}/health
+###
+GET {{url}}/api/versao
+
+### Listagem pública paginada + busca · busca sem resultado
+GET {{url}}/api/cafes?busca=bourbon&pagina=1&tamanho=5
+###
+GET {{url}}/api/cafes?busca=zzzz
+
+### Detalhe · 404
+GET {{url}}/api/cafes/8
+###
+GET {{url}}/api/cafes/9999
+
+### Login (conta de teste do seed) → copie o token para @token
+POST {{url}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "ana@exemplo.com", "senha": "Cliente@2026" }
+
+### Login do admin (senha = Seed__AdminSenha)
+POST {{url}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "admin@magnesiumcoffee.com", "senha": "SENHA_DO_ADMIN" }
+
+### Registro de cliente → 201 · repetir o mesmo e-mail → 409
+POST {{url}}/api/auth/registro
+Content-Type: application/json
+
+{ "nome": "Carla Mendes", "email": "carla@exemplo.com", "senha": "Cafe@12345" }
+
+### Quem sou eu (com token) · sem token → 401
+GET {{url}}/api/auth/eu
+Authorization: Bearer {{token}}
+
+### Criar café (admin) → 201 + Location
+POST {{url}}/api/cafes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome": "Catuaí Amarelo Iúna",
+  "produtor": "Sítio Boa Vista — Família Rocha",
+  "municipio": "Iúna",
+  "variedade": "Catuaí Amarelo",
+  "processo": "Natural",
+  "torra": "media",
+  "altitudeMetros": 1050,
+  "pontuacaoSca": 84.5,
+  "pesoGramas": 250,
+  "preco": 52.9,
+  "estoque": 30,
+  "dataTorra": "2026-10-25T09:00:00-03:00",
+  "descricao": "Chocolate, castanhas e final adocicado."
+}
+
+### Corpo inválido → 400
+POST {{url}}/api/cafes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "nome": "", "torra": "extra", "preco": -1, "pesoGramas": 2 }
+
+### Cliente em rota de admin → 403 (use o token da Ana)
+POST {{url}}/api/cafes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "nome": "Teste", "produtor": "Teste", "municipio": "Iúna", "variedade": "Catuaí", "processo": "Natural", "torra": "media", "altitudeMetros": 1000, "pontuacaoSca": 84, "pesoGramas": 250, "preco": 40, "estoque": 5, "dataTorra": "2026-10-20T09:00:00-03:00" }
+
+### Atualizar café (admin) → 200
+PUT {{url}}/api/cafes/11
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nome": "Catuaí Amarelo Iúna",
+  "produtor": "Sítio Boa Vista — Família Rocha",
+  "municipio": "Iúna",
+  "variedade": "Catuaí Amarelo",
+  "processo": "Natural",
+  "torra": "media",
+  "altitudeMetros": 1050,
+  "pontuacaoSca": 85,
+  "pesoGramas": 250,
+  "preco": 55.9,
+  "estoque": 25,
+  "dataTorra": "2026-10-25T09:00:00-03:00",
+  "descricao": "Chocolate, castanhas e final adocicado."
+}
+
+### Excluir café sem pedidos (admin) → 204
+DELETE {{url}}/api/cafes/11
+Authorization: Bearer {{token}}
+
+### Excluir café que já tem pedidos (admin) → 409
+DELETE {{url}}/api/cafes/1
+Authorization: Bearer {{token}}
+
+### Sem token → 401
+GET {{url}}/api/pedidos
+
+### Regra de negócio: mais pacotes do que o estoque → 409
+POST {{url}}/api/pedidos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "cafeId": 8, "quantidade": 50, "enderecoEntrega": "Rua das Flores, 100 — Guaçuí/ES" }
+
+### Pedido válido → 201 + Location (estoque do café baixa)
+POST {{url}}/api/pedidos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "cafeId": 8, "quantidade": 2, "enderecoEntrega": "Rua das Flores, 100 — Guaçuí/ES" }
+
+### Meus pedidos (cliente vê só os seus; admin vê todos)
+GET {{url}}/api/pedidos?pagina=1&tamanho=10
+Authorization: Bearer {{token}}
+
+### Pedido de outro cliente → 403 (token do Bruno, pedido da Ana)
+GET {{url}}/api/pedidos/1
+Authorization: Bearer {{token}}
+
+### Cancelar pedido (dono ou admin) → 200 · cancelar de novo → 409
+POST {{url}}/api/pedidos/1/cancelar
+Authorization: Bearer {{token}}

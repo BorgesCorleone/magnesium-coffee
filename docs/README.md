@@ -8,6 +8,10 @@ no Swagger** e **perguntas prováveis na arguição**.
 |---|---|---|
 | 1 | Esqueleto no ar (domínio, banco, Program.cs, Docker, CI, Render) | [01-esqueleto.md](01-esqueleto.md) |
 | 2 | Autenticação (registro, login, JWT, papéis) e /health no Swagger | [02-autenticacao.md](02-autenticacao.md) |
+| 3 | Cafés: catálogo paginado com busca e CRUD do admin | [03-cafes.md](03-cafes.md) |
+| 4 | Pedidos e a regra do 409 (estoque) | [04-pedidos.md](04-pedidos.md) |
+| 5 | Front-end React + Vite | [05-front-end.md](05-front-end.md) |
+| — | Roteiro do seminário (10 min + arguição) | [roteiro-seminario.md](roteiro-seminario.md) |
 
 ## Mapa rápido do código
 ```

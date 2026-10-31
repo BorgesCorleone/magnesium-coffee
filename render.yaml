@@ -21,6 +21,10 @@ services:
         generateValue: true
       - key: Cors__Origens
         value: https://magnesium-coffee-web.onrender.com,http://localhost:5173
+      # a Render termina o HTTPS e repassa como HTTP; isso faz a API ler o X-Forwarded-Proto
+      # (o Location do 201 sai com https://)
+      - key: ASPNETCORE_FORWARDEDHEADERS_ENABLED
+        value: "true"
 
   - type: web
     name: magnesium-coffee-web
