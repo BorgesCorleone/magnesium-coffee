@@ -480,3 +480,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Front-end (Vite)
+front/dist/
+front/.env
+front/.env.local

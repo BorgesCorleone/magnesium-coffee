@@ -24,3 +24,22 @@ jobs:
 
       - name: Testes
         run: dotnet test -c Release --no-build
+
+  front:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: front
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+
+      - run: npm ci
+
+      - name: Build do front
+        run: npm run build
