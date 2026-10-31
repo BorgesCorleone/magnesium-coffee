@@ -46,6 +46,21 @@ public static class Seed
         }
 
         await db.SaveChangesAsync();
+
+        // Alguns pedidos de exemplo, para a listagem do cliente e do admin não começarem vazias.
+        if (!await db.Pedidos.AnyAsync())
+        {
+            var ana = await db.Usuarios.SingleAsync(u => u.Email == "ana@exemplo.com");
+            var bruno = await db.Usuarios.SingleAsync(u => u.Email == "bruno@exemplo.com");
+            var cafes = await db.Cafes.OrderBy(c => c.Id).Take(3).ToListAsync();
+
+            db.Pedidos.AddRange(
+                new Pedido(cafes[0].Id, ana.Id, 2, cafes[0].Preco, "Rua das Palmeiras, 120 — Vitória/ES", agora.AddDays(-6)),
+                new Pedido(cafes[1].Id, ana.Id, 1, cafes[1].Preco, "Rua das Palmeiras, 120 — Vitória/ES", agora.AddDays(-2)),
+                new Pedido(cafes[2].Id, bruno.Id, 3, cafes[2].Preco, "Av. Afonso Pena, 900 — Belo Horizonte/MG", agora.AddDays(-1)));
+            await db.SaveChangesAsync();
+            logger.LogInformation("Seed: pedidos de exemplo inseridos");
+        }
     }
 
     private static DateTime Torra(int mes, int dia) => new(2026, mes, dia, 12, 0, 0, DateTimeKind.Utc);

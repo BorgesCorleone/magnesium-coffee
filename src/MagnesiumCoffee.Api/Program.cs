@@ -47,6 +47,8 @@ builder.Services.AddSingleton<TokenServico>();
 
 // --- Serviços de negócio ---
 builder.Services.AddScoped<AuthServico>();
+builder.Services.AddScoped<CafeServico>();
+builder.Services.AddScoped<PedidoServico>();
 
 // --- CORS (front React) ---
 var origens = (builder.Configuration["Cors:Origens"] ?? "http://localhost:5173")
@@ -83,6 +85,8 @@ builder.Services.AddSwaggerGen(c =>
     {
         { new OpenApiSecuritySchemeReference("Bearer", doc), new List<string>() }
     });
+    // Os comentários /// dos controllers viram descrições no Swagger.
+    c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "MagnesiumCoffee.Api.xml"));
 });
 
 var app = builder.Build();

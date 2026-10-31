@@ -18,11 +18,18 @@ public class DominioTests
     }
 
     [Fact]
-    public void Cafe_baixa_estoque_quando_ha_quantidade()
+    public void Cafe_tem_estoque_ate_o_limite_exato()
     {
         var cafe = NovoCafe(estoque: 10);
-        cafe.BaixarEstoque(3);
-        Assert.Equal(7, cafe.Estoque);
+        Assert.True(cafe.TemEstoque(10));
+        Assert.False(cafe.TemEstoque(0));
+    }
+
+    [Fact]
+    public void Cafe_rejeita_torra_invalida()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            new Cafe("Teste", "Produtor", "Iúna", "Catuaí", "Natural", "extra", 1000, 85m, 250, 50m, 1, Agora, "", Agora));
     }
 
     [Fact]

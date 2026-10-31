@@ -64,18 +64,6 @@ public class Cafe
         Descricao = descricao?.Trim() ?? "";
     }
 
+    // A baixa em si é feita no PedidoServico com um UPDATE atômico (seguro com pedidos simultâneos).
     public bool TemEstoque(int quantidade) => quantidade > 0 && quantidade <= Estoque;
-
-    public void BaixarEstoque(int quantidade)
-    {
-        if (!TemEstoque(quantidade))
-            throw new InvalidOperationException("Estoque insuficiente."); // o serviço confere antes (409)
-        Estoque -= quantidade;
-    }
-
-    public void DevolverEstoque(int quantidade)
-    {
-        if (quantidade <= 0) throw new ArgumentException("Quantidade deve ser positiva.", nameof(quantidade));
-        Estoque += quantidade;
-    }
 }
