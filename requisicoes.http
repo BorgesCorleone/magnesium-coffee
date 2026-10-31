@@ -23,11 +23,11 @@ Content-Type: application/json
 
 { "email": "ana@exemplo.com", "senha": "Cliente@2026" }
 
-### Login do admin (senha = Seed__AdminSenha)
+### Login do admin
 POST {{url}}/api/auth/login
 Content-Type: application/json
 
-{ "email": "admin@magnesiumcoffee.com", "senha": "SENHA_DO_ADMIN" }
+{ "email": "admin@magnesiumcoffee.com", "senha": "Cafe@Caparao2026" }
 
 ### Registro de cliente → 201 · repetir o mesmo e-mail → 409
 POST {{url}}/api/auth/registro

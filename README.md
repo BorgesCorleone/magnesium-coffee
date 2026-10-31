@@ -47,7 +47,7 @@ Todos os erros saem em **ProblemDetails** (`type`, `title`, `status`, `detail`).
 - Protegida (401 sem token): https://magnesium-coffee-api.onrender.com/api/pedidos
 
 ## Contas de teste (fictícias)
-- admin: admin@magnesiumcoffee.com / `<senha definida em Seed__AdminSenha>`
+- admin: admin@magnesiumcoffee.com / Cafe@Caparao2026
 - cliente A: ana@exemplo.com / Cliente@2026 · cliente B: bruno@exemplo.com / Cliente@2026
 
 No Swagger: `POST /api/auth/login` → copie o `token` → botão **Authorize** → cole só o token.
@@ -114,4 +114,36 @@ Para rodar: `cd front && npm install && npm run dev` (variável `VITE_API_URL`, 
   `HealthCheckService` e devolve JSON (200 ou 503), agora documentado. Detalhes em `docs/02-autenticacao.md`.
 - **O prompt usado para gerar o front:** "Já faça também o frontend completo. Quero um design
   moderno e responsivo." (com o contexto da API já pronta: rotas, DTOs e regras).
-- **O que aprendi:** _(escrever com as suas palavras antes da entrega)_
+- **O que aprendi:**
+  - **ASP.NET Core / Program.cs:** a ordem do pipeline importa (`UseCors` antes de
+    `UseAuthentication`, que vem antes de `UseAuthorization`). A configuração vem de variáveis de
+    ambiente, e `ConnectionStrings__Padrao` vira `ConnectionStrings:Padrao` (o `__` vira `:`), o que
+    deixa os segredos fora do repositório. Atrás do proxy da Render, foi preciso ligar os forwarded
+    headers para o `Location` sair com `https`.
+  - **Camadas e erros:** o serviço não conhece HTTP; ele devolve `Resultado<T>` com um `TipoErro`, e
+    o controller traduz para 400/401/403/404/409 com `Problem(...)`. Erro de negócio não é exceção.
+    Com `AddProblemDetails` + `UseStatusCodePages`, até o 401 sem corpo sai em ProblemDetails, e o
+    `[ApiController]` devolve 400 sozinho a partir das DataAnnotations dos DTOs.
+  - **EF Core 10 + Npgsql + Neon:** migrations versionadas aplicadas com `MigrateAsync` na subida e
+    um seed idempotente. O Npgsql exige `DateTime` com `Kind=Utc` em `timestamp with time zone`: o DTO
+    recebe `DateTimeOffset` e a entidade guarda `.UtcDateTime`. A Neon entrega a connection string
+    como URI (`postgresql://`), que o Npgsql não lê, por isso a conversão com
+    `NpgsqlConnectionStringBuilder`.
+  - **Regra de negócio e concorrência:** "ler o estoque, conferir e subtrair" falha com dois pedidos
+    ao mesmo tempo. O certo é um `UPDATE` condicional (`ExecuteUpdateAsync` com `Estoque >= quantidade`)
+    dentro de uma transação: se afetar 0 linhas, devolve 409 e nada é gravado.
+  - **Segurança:** a senha é guardada com BCrypt (hash lento e com salt). O JWT assinado com HMAC-SHA256
+    carrega o id e o papel nos claims, e a identidade sai sempre do token, nunca do corpo da requisição.
+    401 é "não sei quem você é" e 403 é "sei, mas você não pode". O registro público nunca cria admin.
+  - **Paginação e busca:** `Skip/Take` vira `OFFSET/LIMIT` no banco. `ToLower().Contains()` funciona
+    no Postgres e no SQLite; `ILike` quebraria os testes.
+  - **Swagger (Swashbuckle 10):** a API mudou para OpenAPI.NET 2.x (`OpenApiSecuritySchemeReference`).
+    `MapHealthChecks` não aparece na documentação; um `MapGet` aparece. Os comentários `///` viram
+    descrições.
+  - **Testes com xUnit + SQLite em memória:** um banco novo por teste, com a conexão aberta, permite
+    testar o 409, o 403 e a paginação nos serviços sem depender do banco da nuvem.
+  - **Docker, CI e deploy:** a imagem em dois estágios (SDK para compilar, runtime para executar) fica
+    menor. No GitHub Actions, `-warnaserror` transforma aviso em erro. Com o Blueprint da Render, cada
+    push no `main` só é publicado se o CI passar, e o `/api/versao` mostra qual commit está no ar.
+  - **Uso da IA:** ela acelera muito, mas eu precisei conferir. O `/health` gerado funcionava e não
+    aparecia no Swagger, e só testando em produção eu percebi.
